@@ -208,7 +208,7 @@ const PredictionForm: React.FC = () => {
               name="fbs"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Glycémie à jeun > 120 mg/dl</FormLabel>
+                  <FormLabel>Glycémie à jeun {'>'}  120 mg/dl</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
