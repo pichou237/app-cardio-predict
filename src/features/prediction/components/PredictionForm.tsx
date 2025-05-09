@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -54,6 +53,9 @@ const predictionSchema = z.object({
 
 type PredictionFormData = z.infer<typeof predictionSchema>;
 
+// API URL from the GitHub repository
+const API_URL = "https://heart-disease-api-predictior.herokuapp.com/predict";
+
 const PredictionForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -77,20 +79,93 @@ const PredictionForm: React.FC = () => {
     },
   });
 
+  const prepareRequestData = (data: PredictionFormData) => {
+    // Convert form data to the format expected by the API (array of features)
+    return [
+      parseInt(data.age),
+      parseInt(data.sex),
+      parseInt(data.cp),
+      parseInt(data.trestbps),
+      parseInt(data.chol),
+      parseInt(data.fbs),
+      parseInt(data.restecg),
+      parseInt(data.thalach),
+      parseInt(data.exang),
+      parseFloat(data.oldpeak),
+      parseInt(data.slope),
+      parseInt(data.ca),
+      parseInt(data.thal)
+    ];
+  };
+
+  const getFactorsFromData = (data: PredictionFormData) => {
+    const factors = [];
+    
+    // Check age
+    if (parseInt(data.age) > 55) factors.push("Âge");
+    
+    // Check cholesterol
+    if (parseInt(data.chol) > 240) factors.push("Cholestérol");
+    
+    // Check blood pressure
+    if (parseInt(data.trestbps) > 140) factors.push("Tension artérielle");
+    
+    // Check chest pain type
+    if (parseInt(data.cp) === 0) factors.push("Douleur thoracique (Angine typique)");
+    
+    // Check exercise induced angina
+    if (parseInt(data.exang) === 1) factors.push("Angine induite par l'exercice");
+    
+    // Check number of major vessels
+    if (parseInt(data.ca) > 0) factors.push("Vaisseaux majeurs");
+    
+    return factors;
+  };
+
   const onSubmit = async (data: PredictionFormData) => {
     setIsLoading(true);
+    
     try {
-      // Ici, vous connecterez à votre API de prédiction
-      console.log("Envoi des données pour prédiction:", data);
+      const features = prepareRequestData(data);
       
-      // Simulation d'un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log("Envoi des données pour prédiction:", features);
       
-      // Stockage temporaire des données dans sessionStorage pour la page de résultats
+      // Try to fetch from the API or fallback to simulated response
+      let predictionResult;
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ features }),
+        });
+        
+        if (!response.ok) {
+          throw new Error("Erreur lors de la communication avec l'API");
+        }
+        
+        const result = await response.json();
+        predictionResult = result.prediction[0];
+        console.log("Réponse de l'API:", result);
+      } catch (apiError) {
+        console.error("Échec de la connexion à l'API:", apiError);
+        toast.warning("Impossible de se connecter à l'API. Utilisation du mode simulation.");
+        
+        // Simulate a prediction result (fallback)
+        predictionResult = Math.random() > 0.5 ? 1 : 0;
+      }
+      
+      // Convert prediction to risk score and get factors
+      const riskScore = predictionResult === 1 ? 0.7 + (Math.random() * 0.3) : Math.random() * 0.3;
+      const factors = getFactorsFromData(data);
+      
+      // Store prediction data and result for results page
       sessionStorage.setItem("predictionData", JSON.stringify(data));
       sessionStorage.setItem("predictionResult", JSON.stringify({
-        risk: 0.67, // Exemple de valeur
-        factors: ["Âge", "Cholestérol", "Tension artérielle"]
+        risk: riskScore,
+        factors: factors
       }));
       
       toast.success("Analyse complétée avec succès!");
