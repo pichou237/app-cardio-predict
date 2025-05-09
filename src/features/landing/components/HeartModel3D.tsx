@@ -2,7 +2,6 @@
 import React, { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, ContactShadows } from "@react-three/drei";
-import { motion } from "framer-motion";
 import * as THREE from "three";
 
 // Définir un composant pour le modèle 3D du cœur
@@ -19,13 +18,9 @@ function Heart({ heartPulse }: { heartPulse: boolean }) {
     }
   });
 
-  // On utilise une forme géométrique simple pour représenter le cœur
   return (
-    <mesh
-      ref={heartRef}
-      rotation={[0, heartPulse ? state => Math.sin(state.clock.getElapsedTime() * 0.5) * 0.2 : 0, 0]}
-    >
-      <sphereGeometry args={[1, 32, 32]} />
+    <mesh ref={heartRef}>
+      <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#e74c3c" roughness={0.4} metalness={0.3} />
     </mesh>
   );
@@ -36,9 +31,9 @@ const HeartModel3D: React.FC = () => {
   const [heartPulse, setHeartPulse] = React.useState(true);
 
   return (
-    <div className="h-[300px] w-full rounded-lg overflow-hidden cursor-pointer">
-      <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }} onClick={() => setHeartPulse(!heartPulse)}>
-        <ambientLight intensity={0.5} />
+    <div className="relative h-[300px] w-full rounded-lg overflow-hidden cursor-pointer">
+      <Canvas shadows camera={{ position: [0, 0, 3], fov: 45 }} onClick={() => setHeartPulse(!heartPulse)}>
+        <ambientLight intensity={1.5} />
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <Heart heartPulse={heartPulse} />
         <ContactShadows
@@ -49,6 +44,7 @@ const HeartModel3D: React.FC = () => {
           far={4.5}
         />
         <OrbitControls enableZoom={false} />
+        <axesHelper args={[5]} />
       </Canvas>
       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-white/80 px-3 py-1 rounded-md text-xs text-gray-700">
         Cliquez pour {heartPulse ? 'arrêter' : 'démarrer'} le battement
