@@ -1,8 +1,9 @@
 
 import React, { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF, ContactShadows } from "@react-three/drei";
+import { OrbitControls, ContactShadows } from "@react-three/drei";
 import { motion } from "framer-motion-3d";
+import * as THREE from "three";
 
 // Définir un composant pour le modèle 3D du cœur
 function Heart({ heartPulse }: { heartPulse: boolean }) {
