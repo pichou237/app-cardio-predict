@@ -2,7 +2,7 @@
 import React, { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, ContactShadows } from "@react-three/drei";
-import { motion } from "framer-motion-3d";
+import { motion } from "framer-motion";
 import * as THREE from "three";
 
 // Définir un composant pour le modèle 3D du cœur
@@ -21,14 +21,13 @@ function Heart({ heartPulse }: { heartPulse: boolean }) {
 
   // On utilise une forme géométrique simple pour représenter le cœur
   return (
-    <motion.mesh
+    <mesh
       ref={heartRef}
-      animate={{ rotateY: heartPulse ? Math.PI * 2 : 0 }}
-      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      rotation={[0, heartPulse ? state => Math.sin(state.clock.getElapsedTime() * 0.5) * 0.2 : 0, 0]}
     >
       <sphereGeometry args={[1, 32, 32]} />
       <meshStandardMaterial color="#e74c3c" roughness={0.4} metalness={0.3} />
-    </motion.mesh>
+    </mesh>
   );
 }
 
