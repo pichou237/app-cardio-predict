@@ -15,8 +15,8 @@ const RiskChart: React.FC<RiskChartProps> = ({ riskScore }) => {
     { name: "Sécurité", value: 1 - normalizedRiskScore },
   ];
 
-  // Couleurs pour les segments
-  const COLORS = ["#ef4444", "#22c55e"];
+  // Couleurs pour les segments - utilisation de couleurs médicales
+  const COLORS = ["#ef4444", "#10b981"];
 
   // Détermine le niveau de risque
   const getRiskLevel = (score: number) => {
@@ -25,11 +25,20 @@ const RiskChart: React.FC<RiskChartProps> = ({ riskScore }) => {
     return "Élevé";
   };
 
+  // Obtenir la couleur principale basée sur le niveau de risque
+  const getRiskColor = (score: number) => {
+    if (score < 0.3) return "#10b981"; // vert
+    if (score < 0.6) return "#f59e0b"; // orange
+    return "#ef4444"; // rouge
+  };
+
   return (
-    <div className="w-full h-96 bg-white rounded-lg p-4 border">
-      <h3 className="text-xl font-semibold mb-4 text-center">Niveau de risque cardiaque</h3>
+    <div className="w-full h-96 bg-white rounded-lg p-4 border shadow-md">
+      <h3 className="text-xl font-semibold mb-4 text-center text-primary">Niveau de risque cardiaque</h3>
       <div className="text-center mb-6">
-        <span className="text-4xl font-bold">{(normalizedRiskScore * 100).toFixed(1)}%</span>
+        <span className="text-4xl font-bold" style={{ color: getRiskColor(normalizedRiskScore) }}>
+          {(normalizedRiskScore * 100).toFixed(1)}%
+        </span>
         <p className="text-lg font-medium text-muted-foreground">
           Risque {getRiskLevel(normalizedRiskScore)}
         </p>
