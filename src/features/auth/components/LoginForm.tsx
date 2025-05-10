@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir un email valide." }),
@@ -19,6 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -37,9 +38,15 @@ const LoginForm: React.FC = () => {
       // Simulation d'un délai d'API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success("Connexion réussie!");
-      // Redirection après connexion
-      window.location.href = "/dashboard";
+      // Vérification si c'est un compte admin
+      if (data.email === "admin@admin.com" && data.password === "admin123") {
+        toast.success("Connexion administrateur réussie!");
+        navigate("/admin");
+      } else {
+        toast.success("Connexion réussie!");
+        // Redirection après connexion
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Erreur de connexion:", error);
       toast.error("Échec de la connexion. Veuillez réessayer.");
@@ -99,6 +106,9 @@ const LoginForm: React.FC = () => {
           <Link to="/register" className="font-medium text-primary hover:underline">
             S'inscrire
           </Link>
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Accès admin: admin@admin.com / admin123
         </p>
       </div>
     </div>

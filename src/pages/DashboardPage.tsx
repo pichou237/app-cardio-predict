@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link } from "react-router-dom";
 
 const DashboardPage: React.FC = () => {
+  // Simulation de connexion admin
+  const isAdmin = true; // En production, cela serait déterminé par le rôle de l'utilisateur
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar isAuthenticated={true} />
@@ -57,11 +60,29 @@ const DashboardPage: React.FC = () => {
                 <p>Complétez votre profil médical pour des analyses plus précises.</p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full" disabled>
-                  Gérer mon profil
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/profile">Gérer mon profil</Link>
                 </Button>
               </CardFooter>
             </Card>
+            
+            {/* Carte Admin uniquement visible pour les administrateurs */}
+            {isAdmin && (
+              <Card className="lg:col-span-3 bg-primary/10 border-primary/20">
+                <CardHeader>
+                  <CardTitle>Administration</CardTitle>
+                  <CardDescription>Accédez au tableau de bord administrateur</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>En tant qu'administrateur, vous pouvez accéder aux statistiques et à la gestion des utilisateurs.</p>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/admin">Tableau de bord administrateur</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
           </div>
         </div>
       </main>

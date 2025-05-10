@@ -32,6 +32,9 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated = false }) => {
                 <Link to="/prediction" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                   Nouvelle prédiction
                 </Link>
+                <Link to="/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                  Mon profil
+                </Link>
               </>
             ) : (
               <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
