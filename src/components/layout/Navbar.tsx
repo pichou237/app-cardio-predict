@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeartPulse, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated: propIsAuthenticated = 
   const [isAuthenticated, setIsAuthenticated] = useState(propIsAuthenticated);
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Check authentication status from localStorage
@@ -34,34 +36,44 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated: propIsAuthenticated = 
     navigate("/");
   };
 
+  // If user is authenticated and trying to access homepage, redirect to appropriate dashboard
+  useEffect(() => {
+    if (isAuthenticated && location.pathname === "/") {
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/prediction");
+      }
+    }
+  }, [isAuthenticated, location.pathname, navigate, userRole]);
+
   return (
     <header className="border-b bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center text-xl font-bold text-primary">
+            <Link to={isAuthenticated ? (userRole === "admin" ? "/admin" : "/prediction") : "/"} className="flex items-center text-xl font-bold text-primary">
               <HeartPulse className="h-6 w-6 mr-2" />
               CardioPredict
             </Link>
           </div>
           
           <nav className="hidden md:flex items-center space-x-4">
-            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-              Accueil
-            </Link>
+            {!isAuthenticated && (
+              <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                Fonctionnalités
+              </Link>
+            )}
             
-            {isAuthenticated ? (
+            {isAuthenticated && (
               userRole === "admin" ? (
                 // Admin navigation
                 <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                   Tableau de bord admin
                 </Link>
               ) : (
-                // User navigation
+                // User navigation - removed dashboard link
                 <>
-                  <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                    Tableau de bord
-                  </Link>
                   <Link to="/prediction" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                     Nouvelle prédiction
                   </Link>
@@ -70,10 +82,6 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated: propIsAuthenticated = 
                   </Link>
                 </>
               )
-            ) : (
-              <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                Fonctionnalités
-              </Link>
             )}
           </nav>
           
