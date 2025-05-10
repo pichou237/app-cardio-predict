@@ -1,14 +1,39 @@
-
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ isAuthenticated = false }) => {
+const Navbar: React.FC<NavbarProps> = ({ isAuthenticated: propIsAuthenticated = false }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(propIsAuthenticated);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check authentication status from localStorage
+    const authStatus = localStorage.getItem("isAuthenticated") === "true";
+    const role = localStorage.getItem("userRole");
+    setIsAuthenticated(authStatus);
+    setUserRole(role);
+  }, []);
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
+    setIsAuthenticated(false);
+    setUserRole(null);
+    
+    // Redirect to home
+    toast.success("Déconnexion réussie");
+    navigate("/");
+  };
+
   return (
     <header className="border-b bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -24,18 +49,27 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated = false }) => {
             <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               Accueil
             </Link>
+            
             {isAuthenticated ? (
-              <>
-                <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                  Tableau de bord
+              userRole === "admin" ? (
+                // Admin navigation
+                <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                  Tableau de bord admin
                 </Link>
-                <Link to="/prediction" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                  Nouvelle prédiction
-                </Link>
-                <Link to="/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                  Mon profil
-                </Link>
-              </>
+              ) : (
+                // User navigation
+                <>
+                  <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Tableau de bord
+                  </Link>
+                  <Link to="/prediction" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Nouvelle prédiction
+                  </Link>
+                  <Link to="/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Mon profil
+                  </Link>
+                </>
+              )
             ) : (
               <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                 Fonctionnalités
@@ -45,7 +79,8 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated = false }) => {
           
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <Button variant="outline" onClick={() => console.log("Déconnexion")}>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
                 Déconnexion
               </Button>
             ) : (

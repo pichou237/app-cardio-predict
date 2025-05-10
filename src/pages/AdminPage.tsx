@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart3, Users, TrendingUp } from "lucide-react";
+import { BarChart3, Users, TrendingUp, Edit, Trash2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 // Données fictives pour les graphiques
 const usersData = [
@@ -40,15 +45,138 @@ const riskDistributionData = [
 
 const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
-const recentUsersData = [
-  { id: 1, name: "Sophie Martin", email: "sophie.martin@exemple.com", date: "10/05/2025" },
-  { id: 2, name: "Thomas Bernard", email: "thomas.bernard@exemple.com", date: "09/05/2025" },
-  { id: 3, name: "Camille Dubois", email: "camille.dubois@exemple.com", date: "08/05/2025" },
-  { id: 4, name: "Lucas Petit", email: "lucas.petit@exemple.com", date: "07/05/2025" },
-  { id: 5, name: "Emma Leroy", email: "emma.leroy@exemple.com", date: "06/05/2025" },
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  date: string;
+  role: "admin" | "user";
+}
+
+// Mock User Data
+const initialUsersData: User[] = [
+  { id: 1, name: "Sophie Martin", email: "sophie.martin@exemple.com", date: "10/05/2025", role: "user" },
+  { id: 2, name: "Thomas Bernard", email: "thomas.bernard@exemple.com", date: "09/05/2025", role: "user" },
+  { id: 3, name: "Camille Dubois", email: "camille.dubois@exemple.com", date: "08/05/2025", role: "user" },
+  { id: 4, name: "Lucas Petit", email: "lucas.petit@exemple.com", date: "07/05/2025", role: "user" },
+  { id: 5, name: "Emma Leroy", email: "emma.leroy@exemple.com", date: "06/05/2025", role: "user" },
+  { id: 6, name: "Admin", email: "admin@admin.com", date: "01/01/2025", role: "admin" }
+];
+
+// Mock prediction data
+interface Prediction {
+  id: number;
+  userId: number;
+  userName: string;
+  date: string;
+  risk: "Faible" | "Modéré" | "Élevé";
+}
+
+const initialPredictionsData: Prediction[] = [
+  { id: 1, userId: 1, userName: "Sophie Martin", date: "10/05/2025", risk: "Faible" },
+  { id: 2, userId: 2, userName: "Thomas Bernard", date: "09/05/2025", risk: "Modéré" },
+  { id: 3, userId: 3, userName: "Camille Dubois", date: "08/05/2025", risk: "Élevé" },
+  { id: 4, userId: 4, userName: "Lucas Petit", date: "07/05/2025", risk: "Faible" },
+  { id: 5, userId: 5, userName: "Emma Leroy", date: "06/05/2025", risk: "Modéré" }
 ];
 
 const AdminPage: React.FC = () => {
+  const [users, setUsers] = useState<User[]>(initialUsersData);
+  const [predictions, setPredictions] = useState<Prediction[]>(initialPredictionsData);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userFormData, setUserFormData] = useState({
+    name: "",
+    email: "",
+    role: "user" as "admin" | "user"
+  });
+
+  // Handle user form input change
+  const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserFormData({ ...userFormData, [name]: value });
+  };
+
+  // Open dialog for creating a new user
+  const handleAddUser = () => {
+    setCurrentUser(null);
+    setUserFormData({ name: "", email: "", role: "user" });
+    setIsUserDialogOpen(true);
+  };
+
+  // Open dialog for editing an existing user
+  const handleEditUser = (user: User) => {
+    setCurrentUser(user);
+    setUserFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+    setIsUserDialogOpen(true);
+  };
+
+  // Open dialog for deleting a user
+  const handleDeleteUserConfirm = (user: User) => {
+    setCurrentUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Save user (create or update)
+  const handleSaveUser = () => {
+    if (!userFormData.name || !userFormData.email) {
+      toast.error("Tous les champs sont obligatoires");
+      return;
+    }
+
+    if (currentUser) {
+      // Update existing user
+      const updatedUsers = users.map(user => 
+        user.id === currentUser.id ? { 
+          ...user, 
+          name: userFormData.name,
+          email: userFormData.email,
+          role: userFormData.role
+        } : user
+      );
+      setUsers(updatedUsers);
+      toast.success("Utilisateur mis à jour avec succès");
+    } else {
+      // Create new user
+      const newUser: User = {
+        id: Math.max(0, ...users.map(u => u.id)) + 1,
+        name: userFormData.name,
+        email: userFormData.email,
+        date: new Date().toLocaleDateString('fr-FR'),
+        role: userFormData.role
+      };
+      setUsers([...users, newUser]);
+      toast.success("Utilisateur créé avec succès");
+    }
+    
+    setIsUserDialogOpen(false);
+  };
+
+  // Delete user
+  const handleDeleteUser = () => {
+    if (!currentUser) return;
+    
+    // Prevent deleting the main admin account
+    if (currentUser.email === "admin@admin.com") {
+      toast.error("Vous ne pouvez pas supprimer le compte administrateur principal");
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+    
+    // Filter out the user to delete
+    setUsers(users.filter(user => user.id !== currentUser.id));
+    // Also remove any predictions associated with this user
+    setPredictions(predictions.filter(pred => pred.userId !== currentUser.id));
+    
+    toast.success("Utilisateur supprimé avec succès");
+    setIsDeleteDialogOpen(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar isAuthenticated={true} />
@@ -65,7 +193,7 @@ const AdminPage: React.FC = () => {
                 <CardTitle className="text-sm font-medium">Utilisateurs totaux</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">988</div>
+                <div className="text-2xl font-bold">{users.length}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-emerald-500">+12%</span> depuis le mois dernier
                 </p>
@@ -77,7 +205,7 @@ const AdminPage: React.FC = () => {
                 <CardTitle className="text-sm font-medium">Prédictions totales</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,450</div>
+                <div className="text-2xl font-bold">{predictions.length}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-emerald-500">+8%</span> depuis le mois dernier
                 </p>
@@ -220,9 +348,15 @@ const AdminPage: React.FC = () => {
             
             <TabsContent value="users" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Utilisateurs récents</CardTitle>
-                  <CardDescription>Liste des derniers utilisateurs enregistrés</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Gestion des utilisateurs</CardTitle>
+                    <CardDescription>Liste des utilisateurs enregistrés</CardDescription>
+                  </div>
+                  <Button onClick={handleAddUser} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -232,19 +366,45 @@ const AdminPage: React.FC = () => {
                         <TableHead>Nom</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Date d'inscription</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {recentUsersData.map((user) => (
+                      {users.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">{user.id}</TableCell>
                           <TableCell>{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{user.date}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              user.role === 'admin' 
+                                ? 'bg-purple-100 text-purple-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {user.role === 'admin' ? 'Admin' : 'Utilisateur'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleDeleteUserConfirm(user)}
+                                disabled={user.email === 'admin@admin.com'}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
-                    <TableCaption>Liste des 5 derniers utilisateurs inscrits.</TableCaption>
+                    <TableCaption>Liste des utilisateurs inscrits sur la plateforme.</TableCaption>
                   </Table>
                 </CardContent>
               </Card>
@@ -267,48 +427,26 @@ const AdminPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">1</TableCell>
-                        <TableCell>Sophie Martin</TableCell>
-                        <TableCell>10/05/2025</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Faible</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">2</TableCell>
-                        <TableCell>Thomas Bernard</TableCell>
-                        <TableCell>09/05/2025</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Modéré</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">3</TableCell>
-                        <TableCell>Camille Dubois</TableCell>
-                        <TableCell>08/05/2025</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">Élevé</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">4</TableCell>
-                        <TableCell>Lucas Petit</TableCell>
-                        <TableCell>07/05/2025</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Faible</span>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">5</TableCell>
-                        <TableCell>Emma Leroy</TableCell>
-                        <TableCell>06/05/2025</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Modéré</span>
-                        </TableCell>
-                      </TableRow>
+                      {predictions.map((prediction) => (
+                        <TableRow key={prediction.id}>
+                          <TableCell className="font-medium">{prediction.id}</TableCell>
+                          <TableCell>{prediction.userName}</TableCell>
+                          <TableCell>{prediction.date}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              prediction.risk === 'Faible'
+                                ? 'bg-green-100 text-green-800'
+                                : prediction.risk === 'Modéré'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}>
+                              {prediction.risk}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
-                    <TableCaption>Liste des 5 dernières prédictions.</TableCaption>
+                    <TableCaption>Liste des prédictions effectuées.</TableCaption>
                   </Table>
                 </CardContent>
               </Card>
@@ -317,6 +455,105 @@ const AdminPage: React.FC = () => {
         </div>
       </main>
       <Footer />
+
+      {/* User Dialog for Create/Edit */}
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{currentUser ? "Modifier l'utilisateur" : "Créer un utilisateur"}</DialogTitle>
+            <DialogDescription>
+              {currentUser 
+                ? "Modifier les informations de l'utilisateur." 
+                : "Ajouter un nouvel utilisateur à la plateforme."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={userFormData.name}
+                onChange={handleUserFormChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                value={userFormData.email}
+                onChange={handleUserFormChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                Rôle
+              </Label>
+              <div className="col-span-3 flex gap-4">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="user-role"
+                    name="role"
+                    value="user"
+                    checked={userFormData.role === "user"}
+                    onChange={() => setUserFormData({ ...userFormData, role: "user" })}
+                    className="mr-2"
+                  />
+                  <Label htmlFor="user-role">Utilisateur</Label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="admin-role"
+                    name="role"
+                    value="admin"
+                    checked={userFormData.role === "admin"}
+                    onChange={() => setUserFormData({ ...userFormData, role: "admin" })}
+                    className="mr-2"
+                  />
+                  <Label htmlFor="admin-role">Admin</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" onClick={handleSaveUser}>
+              {currentUser ? "Mettre à jour" : "Créer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser}>
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

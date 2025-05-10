@@ -32,19 +32,25 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Ici, vous connecterez à votre API d'authentification
+      // Simulated authentication
       console.log("Tentative de connexion avec:", data);
       
       // Simulation d'un délai d'API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Vérification si c'est un compte admin
+      // Admin authentication check
       if (data.email === "admin@admin.com" && data.password === "admin123") {
+        // Store admin status in localStorage for persistence
+        localStorage.setItem("userRole", "admin");
+        localStorage.setItem("isAuthenticated", "true");
         toast.success("Connexion administrateur réussie!");
         navigate("/admin");
       } else {
+        // Regular user authentication
+        localStorage.setItem("userRole", "user");
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", data.email);
         toast.success("Connexion réussie!");
-        // Redirection après connexion
         navigate("/dashboard");
       }
     } catch (error) {
