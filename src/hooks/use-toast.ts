@@ -1,7 +1,8 @@
 
 import { useState, useCallback } from "react";
 
-type ToastType = "default" | "success" | "error" | "warning" | "info";
+// Updated to match the expected types in the Toast component
+type ToastType = "default" | "destructive";
 
 interface ToastProps {
   id: string;
@@ -10,6 +11,7 @@ interface ToastProps {
   duration?: number;
   type?: ToastType;
   action?: React.ReactNode;
+  variant?: "default" | "destructive";
 }
 
 interface ToastOptions {
@@ -72,4 +74,3 @@ export const toast = (options: ToastOptions) => {
   // Actual implementation would match the hook above
   console.log("Toast:", options);
 };
-
