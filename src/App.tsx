@@ -14,6 +14,7 @@ import ResultsPage from "./pages/ResultsPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import ChatBot from "./features/chatbot/components/ChatBot";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,8 @@ const App = () => (
           />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        {/* Chatbot disponible sur toutes les pages */}
+        <ChatBot />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

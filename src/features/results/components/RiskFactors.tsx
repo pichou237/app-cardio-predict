@@ -28,7 +28,7 @@ const RiskFactors: React.FC<RiskFactorsProps> = ({ factors }) => {
         <p className="text-muted-foreground">Aucun facteur de risque majeur n'a été identifié.</p>
       )}
       
-      <div className="mt-6 bg-accent/20 p-4 rounded-lg border border-accent/30">
+      <div className="mt-6 bg-secondary/10 p-4 rounded-lg border border-secondary/30">
         <h4 className="text-lg font-medium text-primary">Recommandations</h4>
         <p className="text-muted-foreground mt-2">
           Consultez un professionnel de la santé pour discuter de ces résultats et établir un plan de prévention personnalisé.
