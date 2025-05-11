@@ -1,13 +1,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Heart, Bot } from "lucide-react";
+import { Send, Heart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -93,6 +93,23 @@ const ChatBot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    // Afficher une notification lorsque le chatbot est disponible
+    if (isMinimized) {
+      const timeout = setTimeout(() => {
+        toast("Assistant santé disponible", {
+          description: "Posez vos questions sur la santé cardiaque",
+          action: {
+            label: "Ouvrir",
+            onClick: () => setIsMinimized(false)
+          }
+        });
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
   const handleSend = () => {
     if (input.trim() === "") return;
 
@@ -129,25 +146,27 @@ const ChatBot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {isMinimized ? (
         <Button 
           onClick={() => setIsMinimized(false)} 
-          className="rounded-full w-14 h-14 flex items-center justify-center bg-primary hover:bg-primary/90 shadow-lg"
+          className="rounded-full w-16 h-16 flex items-center justify-center bg-primary hover:bg-primary/90 shadow-lg transform hover:scale-110 transition-all"
+          aria-label="Ouvrir le chatbot"
         >
-          <Bot size={24} />
+          <MessageCircle size={28} className="text-white animate-pulse" />
         </Button>
       ) : (
-        <Card className="w-80 md:w-96 shadow-xl">
+        <Card className="w-80 md:w-96 shadow-xl border-2 border-primary/20 animate-in fade-in zoom-in-95 duration-300">
           <CardHeader className="bg-primary text-primary-foreground py-3 px-4 flex flex-row justify-between items-center">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Heart className="h-5 w-5" /> Assistant CardioPredict
+            <CardTitle className="text-base flex items-center gap-2 font-medium">
+              <Heart className="h-5 w-5 animate-pulse" /> Assistant Santé Cardiaque
             </CardTitle>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-8 w-8 p-0 text-primary-foreground" 
+              className="h-8 w-8 p-0 text-primary-foreground hover:bg-primary/80" 
               onClick={() => setIsMinimized(true)}
+              aria-label="Minimiser"
             >
               <span className="sr-only">Minimiser</span>
               <svg width="15" height="2" viewBox="0 0 15 2" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -168,18 +187,18 @@ const ChatBot: React.FC = () => {
                   >
                     {msg.role === "assistant" && (
                       <Avatar className="w-8 h-8 bg-primary text-primary-foreground">
-                        <Bot size={16} />
+                        <Heart size={16} />
                       </Avatar>
                     )}
                     <div
                       className={cn(
-                        "rounded-lg px-3 py-2 max-w-[85%]",
+                        "rounded-lg px-3 py-2 max-w-[85%] shadow-sm",
                         msg.role === "user" 
                           ? "bg-primary text-primary-foreground" 
                           : "bg-secondary/10 text-foreground"
                       )}
                     >
-                      <p>{msg.content}</p>
+                      <p className="break-words">{msg.content}</p>
                       <div 
                         className={cn(
                           "text-xs mt-1",
@@ -200,7 +219,7 @@ const ChatBot: React.FC = () => {
               </div>
             </ScrollArea>
           </CardContent>
-          <CardFooter className="border-t p-3">
+          <CardFooter className="border-t p-3 bg-muted/30">
             <form 
               className="flex w-full items-center space-x-2"
               onSubmit={(e) => {
@@ -214,9 +233,10 @@ const ChatBot: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1"
+                className="flex-1 focus-visible:ring-primary"
+                autoComplete="off"
               />
-              <Button type="submit" size="icon" className="shrink-0">
+              <Button type="submit" size="icon" className="shrink-0 bg-primary hover:bg-primary/90">
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Envoyer</span>
               </Button>
