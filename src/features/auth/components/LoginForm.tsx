@@ -33,7 +33,13 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await AuthService.login(data);
+      // Cast to AuthCredentials to ensure type safety
+      const credentials: AuthCredentials = {
+        username: data.username,
+        password: data.password
+      };
+      
+      await AuthService.login(credentials);
       
       // Admin authentication check
       if (data.username === "admin@admin.com" && data.password === "admin123") {
