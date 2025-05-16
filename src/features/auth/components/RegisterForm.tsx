@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthService } from "@/services/auth-service";
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
-  email: z.string().email({ message: "Veuillez saisir un email valide." }),
+  username: z.string().min(2, { message: "Le nom d'utilisateur doit contenir au moins 2 caractères." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -24,12 +24,12 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const RegisterForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
-      email: "",
+      username: "",
       password: "",
       confirmPassword: "",
     },
@@ -38,18 +38,21 @@ const RegisterForm: React.FC = () => {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      // Ici, vous connecterez à votre API d'inscription
-      console.log("Tentative d'inscription avec:", data);
+      const { username, password } = data;
+      await AuthService.register({ username, password });
       
-      // Simulation d'un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Inscription réussie! Vous êtes maintenant connecté.");
       
-      toast.success("Inscription réussie! Vous pouvez maintenant vous connecter.");
+      // Enregistrer les informations d'authentification
+      localStorage.setItem("userRole", "user");
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("username", username);
+      
       // Redirection après inscription
-      window.location.href = "/login";
+      navigate("/dashboard");
     } catch (error) {
       console.error("Erreur d'inscription:", error);
-      toast.error("Échec de l'inscription. Veuillez réessayer.");
+      toast.error(error instanceof Error ? error.message : "Échec de l'inscription. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -68,26 +71,12 @@ const RegisterForm: React.FC = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="name"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom complet</FormLabel>
+                <FormLabel>Nom d'utilisateur</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="exemple@email.com" {...field} />
+                  <Input placeholder="monnomdutilisateur" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -9,9 +9,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthService, AuthCredentials } from "@/services/auth-service";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Veuillez saisir un email valide." }),
+  username: z.string().min(1, { message: "Le nom d'utilisateur est requis." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
 });
 
@@ -24,7 +25,7 @@ const LoginForm: React.FC = () => {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -32,14 +33,10 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Simulated authentication
-      console.log("Tentative de connexion avec:", data);
-      
-      // Simulation d'un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await AuthService.login(data);
       
       // Admin authentication check
-      if (data.email === "admin@admin.com" && data.password === "admin123") {
+      if (data.username === "admin@admin.com" && data.password === "admin123") {
         // Store admin status in localStorage for persistence
         localStorage.setItem("userRole", "admin");
         localStorage.setItem("isAuthenticated", "true");
@@ -49,13 +46,13 @@ const LoginForm: React.FC = () => {
         // Regular user authentication
         localStorage.setItem("userRole", "user");
         localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userEmail", data.email);
+        localStorage.setItem("userEmail", data.username);
         toast.success("Connexion réussie!");
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      toast.error("Échec de la connexion. Veuillez réessayer.");
+      toast.error(error instanceof Error ? error.message : "Échec de la connexion. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -74,12 +71,12 @@ const LoginForm: React.FC = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="email"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Nom d'utilisateur</FormLabel>
                 <FormControl>
-                  <Input placeholder="exemple@email.com" {...field} />
+                  <Input placeholder="votrenomdutilisateur" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

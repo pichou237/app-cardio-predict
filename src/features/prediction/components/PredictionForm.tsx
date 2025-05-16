@@ -8,6 +8,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { PredictionService } from "@/services/prediction-service";
+import { isAuthenticated } from "@/services/api-config";
 
 const predictionSchema = z.object({
   age: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 0 && parseInt(val) < 120, {
@@ -79,7 +81,7 @@ const PredictionForm: React.FC = () => {
     },
   });
 
-  const prepareRequestData = (data: PredictionFormData) => {
+  const prepareRequestData = (data: PredictionFormData): number[] => {
     // Convert form data to the format expected by the API (array of features)
     return [
       parseInt(data.age),
@@ -126,50 +128,52 @@ const PredictionForm: React.FC = () => {
     setIsLoading(true);
     
     try {
+      // Vérifier si l'utilisateur est authentifié
+      if (!isAuthenticated()) {
+        toast.error("Vous devez être connecté pour effectuer une prédiction.");
+        navigate("/login");
+        return;
+      }
+
       const features = prepareRequestData(data);
-      
       console.log("Envoi des données pour prédiction:", features);
       
-      // Try to fetch from the API or fallback to simulated response
-      let predictionResult;
-      
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ features }),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la communication avec l'API");
-        }
-        
-        const result = await response.json();
-        predictionResult = result.prediction[0];
+        // Appel à l'API de prédiction
+        const result = await PredictionService.predict(features);
         console.log("Réponse de l'API:", result);
+        
+        // Calcul des facteurs de risque
+        const factors = getFactorsFromData(data);
+        
+        // Stockage des résultats pour la page de résultats
+        sessionStorage.setItem("predictionData", JSON.stringify(data));
+        sessionStorage.setItem("predictionResult", JSON.stringify({
+          risk: result.prediction / 100, // Convertir en pourcentage entre 0 et 1
+          factors: factors,
+          timestamp: result.timestamp
+        }));
+        
+        toast.success("Analyse complétée avec succès!");
+        navigate("/results");
       } catch (apiError) {
         console.error("Échec de la connexion à l'API:", apiError);
         toast.warning("Impossible de se connecter à l'API. Utilisation du mode simulation.");
         
-        // Simulate a prediction result (fallback)
-        predictionResult = Math.random() > 0.5 ? 1 : 0;
+        // Mode de secours en cas d'échec de l'API
+        const riskScore = Math.random() > 0.5 ? 0.7 + (Math.random() * 0.3) : Math.random() * 0.3;
+        const factors = getFactorsFromData(data);
+        
+        sessionStorage.setItem("predictionData", JSON.stringify(data));
+        sessionStorage.setItem("predictionResult", JSON.stringify({
+          risk: riskScore,
+          factors: factors,
+          timestamp: new Date().toISOString()
+        }));
+        
+        toast.success("Analyse simulée complétée!");
+        navigate("/results");
       }
-      
-      // Convert prediction to risk score and get factors
-      const riskScore = predictionResult === 1 ? 0.7 + (Math.random() * 0.3) : Math.random() * 0.3;
-      const factors = getFactorsFromData(data);
-      
-      // Store prediction data and result for results page
-      sessionStorage.setItem("predictionData", JSON.stringify(data));
-      sessionStorage.setItem("predictionResult", JSON.stringify({
-        risk: riskScore,
-        factors: factors
-      }));
-      
-      toast.success("Analyse complétée avec succès!");
-      navigate("/results");
     } catch (error) {
       console.error("Erreur de prédiction:", error);
       toast.error("Échec de l'analyse. Veuillez réessayer.");

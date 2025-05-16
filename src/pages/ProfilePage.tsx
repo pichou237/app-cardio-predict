@@ -9,28 +9,109 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { User, Lock, Shield } from "lucide-react";
+import { User, Lock, Shield, Clock } from "lucide-react";
+import { AuthService } from "@/services/auth-service";
+import { usePredictionHistory } from "@/features/prediction/hooks/usePredictionHistory";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
-    name: "Jean Dupont",
-    email: "jean.dupont@exemple.com",
+    name: localStorage.getItem("username") || "Utilisateur",
+    email: localStorage.getItem("userEmail") || "",
     phone: "06 12 34 56 78",
     birthdate: "1980-01-01",
     address: "123 Rue de Paris, 75001 Paris",
     profilePicture: ""
   });
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const { history, isLoading: isLoadingHistory } = usePredictionHistory();
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Profil mis à jour avec succès !");
-    setIsEditing(false);
+    
+    try {
+      const currentUsername = localStorage.getItem("username");
+      const apiKey = localStorage.getItem("api_key");
+      
+      if (currentUsername && apiKey && user.name !== currentUsername) {
+        await AuthService.updateUser(currentUsername, {
+          api_key: apiKey,
+          new_username: user.name
+        });
+      }
+      
+      toast.success("Profil mis à jour avec succès !");
+      setIsEditing(false);
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour du profil");
+      console.error("Erreur de mise à jour:", error);
+    }
   };
   
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Mot de passe changé avec succès !");
+    
+    // Récupérer les valeurs des champs de mot de passe
+    const currentPasswordEl = document.getElementById("current-password") as HTMLInputElement;
+    const newPasswordEl = document.getElementById("new-password") as HTMLInputElement;
+    const confirmPasswordEl = document.getElementById("confirm-password") as HTMLInputElement;
+    
+    if (!currentPasswordEl || !newPasswordEl || !confirmPasswordEl) return;
+    
+    const currentPassword = currentPasswordEl.value;
+    const newPassword = newPasswordEl.value;
+    const confirmPassword = confirmPasswordEl.value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+    
+    try {
+      const username = localStorage.getItem("username");
+      const apiKey = localStorage.getItem("api_key");
+      
+      if (username && apiKey) {
+        await AuthService.updateUser(username, {
+          api_key: apiKey,
+          new_password: newPassword
+        });
+        
+        toast.success("Mot de passe changé avec succès !");
+        // Réinitialiser les champs
+        currentPasswordEl.value = "";
+        newPasswordEl.value = "";
+        confirmPasswordEl.value = "";
+      } else {
+        toast.error("Informations d'authentification manquantes");
+      }
+    } catch (error) {
+      toast.error("Erreur lors du changement de mot de passe");
+      console.error("Erreur de changement de mot de passe:", error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+    } catch (e) {
+      return "Date inconnue";
+    }
+  };
+
+  const formatRiskLevel = (prediction: number) => {
+    const riskPercentage = prediction * 100;
+    if (riskPercentage < 30) return "Faible";
+    if (riskPercentage < 70) return "Modéré";
+    return "Élevé";
   };
 
   return (
@@ -63,7 +144,7 @@ const ProfilePage: React.FC = () => {
                 Sécurité
               </TabsTrigger>
               <TabsTrigger value="history">
-                <Shield className="mr-2 h-4 w-4" />
+                <Clock className="mr-2 h-4 w-4" />
                 Historique
               </TabsTrigger>
             </TabsList>
@@ -78,7 +159,7 @@ const ProfilePage: React.FC = () => {
                   <form onSubmit={handleSaveProfile}>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nom complet</Label>
+                        <Label htmlFor="name">Nom d'utilisateur</Label>
                         <Input 
                           id="name" 
                           value={user.name}
@@ -177,9 +258,40 @@ const ProfilePage: React.FC = () => {
                   <CardDescription>Vos analyses précédentes</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Vous n'avez pas encore d'analyses enregistrées.</p>
-                  </div>
+                  {isLoadingHistory ? (
+                    <div className="text-center py-8">
+                      <p>Chargement de l'historique...</p>
+                    </div>
+                  ) : history.length > 0 ? (
+                    <div className="divide-y">
+                      {history.map((entry, index) => (
+                        <div key={index} className="py-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <div>
+                              <span className="font-medium">Analyse #{history.length - index}</span>
+                              <span className="text-sm text-muted-foreground ml-2">
+                                {formatDate(entry.timestamp)}
+                              </span>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              entry.prediction < 0.3 ? 'bg-green-100 text-green-800' : 
+                              entry.prediction < 0.7 ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              Risque {formatRiskLevel(entry.prediction)}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Score: {(entry.prediction * 100).toFixed(1)}%
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Vous n'avez pas encore d'analyses enregistrées.</p>
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="w-full" asChild>
