@@ -24,6 +24,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const RegisterForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<RegisterFormData>({
@@ -39,7 +40,18 @@ const RegisterForm: React.FC = () => {
     setIsLoading(true);
     try {
       const { username, password } = data;
-      await AuthService.register({ username, password });
+      
+      try {
+        await AuthService.register({ username, password });
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+        // Activate offline mode if API is unreachable
+        setIsOfflineMode(true);
+        toast.warning("Mode hors ligne activé: API inaccessible");
+        // Early return to show the offline mode message
+        setIsLoading(false);
+        return;
+      }
       
       toast.success("Inscription réussie! Vous êtes maintenant connecté.");
       
@@ -53,6 +65,27 @@ const RegisterForm: React.FC = () => {
     } catch (error) {
       console.error("Erreur d'inscription:", error);
       toast.error(error instanceof Error ? error.message : "Échec de l'inscription. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleOfflineRegister = () => {
+    setIsLoading(true);
+    try {
+      const username = form.getValues("username") || "utilisateur.test";
+      
+      // Set offline user
+      localStorage.setItem("userRole", "user");
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("username", username);
+      localStorage.setItem("isOfflineMode", "true");
+      
+      toast.success("Inscription en mode hors ligne réussie!");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Erreur d'inscription offline:", error);
+      toast.error("Erreur lors de l'inscription en mode hors ligne");
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +149,21 @@ const RegisterForm: React.FC = () => {
           </Button>
         </form>
       </Form>
+      
+      {isOfflineMode && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mt-4">
+          <h3 className="font-medium text-amber-800">Problème de connexion au serveur</h3>
+          <p className="text-sm text-amber-700 mt-1">Le serveur semble indisponible. Vous pouvez créer un compte en mode hors ligne avec un accès limité.</p>
+          <Button 
+            variant="outline" 
+            className="w-full mt-2 border-amber-500 text-amber-700 hover:bg-amber-100"
+            onClick={handleOfflineRegister}
+            disabled={isLoading}
+          >
+            {isLoading ? "Inscription en cours..." : "Créer un compte hors ligne"}
+          </Button>
+        </div>
+      )}
       
       <div className="text-center text-sm">
         <p>

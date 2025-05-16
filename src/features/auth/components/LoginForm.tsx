@@ -20,6 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const navigate = useNavigate();
   
   const form = useForm<LoginFormData>({
@@ -39,7 +40,14 @@ const LoginForm: React.FC = () => {
         password: data.password
       };
       
-      await AuthService.login(credentials);
+      try {
+        await AuthService.login(credentials);
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+        // Activate offline mode if API is unreachable
+        setIsOfflineMode(true);
+        toast.warning("Mode hors ligne activé: API inaccessible");
+      }
       
       // Admin authentication check
       if (data.username === "admin@admin.com" && data.password === "admin123") {
@@ -59,6 +67,25 @@ const LoginForm: React.FC = () => {
     } catch (error) {
       console.error("Erreur de connexion:", error);
       toast.error(error instanceof Error ? error.message : "Échec de la connexion. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOfflineLogin = () => {
+    setIsLoading(true);
+    try {
+      // Set offline user
+      localStorage.setItem("userRole", "user");
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", "utilisateur.test@offline.com");
+      localStorage.setItem("isOfflineMode", "true");
+      
+      toast.success("Connexion en mode hors ligne réussie!");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Erreur de connexion offline:", error);
+      toast.error("Erreur lors de la connexion en mode hors ligne");
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +135,21 @@ const LoginForm: React.FC = () => {
           </Button>
         </form>
       </Form>
+      
+      {isOfflineMode && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mt-4">
+          <h3 className="font-medium text-amber-800">Problème de connexion au serveur</h3>
+          <p className="text-sm text-amber-700 mt-1">Le serveur semble indisponible. Vous pouvez continuer en mode hors ligne avec un accès limité.</p>
+          <Button 
+            variant="outline" 
+            className="w-full mt-2 border-amber-500 text-amber-700 hover:bg-amber-100"
+            onClick={handleOfflineLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? "Connexion en cours..." : "Continuer en mode hors ligne"}
+          </Button>
+        </div>
+      )}
       
       <div className="text-center text-sm">
         <p>
