@@ -1,4 +1,3 @@
-
 // Configuration de l'API pour CardioPredict
 
 // URL de base de l'API
@@ -18,6 +17,13 @@ export const API_ENDPOINTS = {
   // Administration
   ADMIN_USERS: `${API_BASE_URL}/admin/users`,
   PUBLIC_USERS: `${API_BASE_URL}/users`,
+  
+  // Statistiques
+  STATS_USERS_TOTAL: `${API_BASE_URL}/stats/users/total`,
+  STATS_PREDICTIONS_TOTAL: `${API_BASE_URL}/stats/predictions/total`,
+  STATS_PREDICTIONS_MONTHLY: `${API_BASE_URL}/stats/predictions/monthly`,
+  STATS_PREDICTIONS_DAILY: `${API_BASE_URL}/stats/predictions/daily`,
+  STATS_RISK_AVERAGE: `${API_BASE_URL}/stats/risk/average`
 };
 
 // Fonctions utilitaires pour l'API

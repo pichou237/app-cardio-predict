@@ -18,6 +18,11 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const DEFAULT_CREDENTIALS = [
+  { username: "admin@admin.com", password: "admin123", role: "admin" },
+  { username: "utilisateur.test@offline.com", password: "test123", role: "user" },
+];
+
 const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -49,15 +54,26 @@ const LoginForm: React.FC = () => {
         toast.warning("Mode hors ligne activé: API inaccessible");
       }
       
-      // Admin authentication check
-      if (data.username === "admin@admin.com" && data.password === "admin123") {
-        // Store admin status in localStorage for persistence
-        localStorage.setItem("userRole", "admin");
+      // Check against default credentials
+      const matchedUser = DEFAULT_CREDENTIALS.find(
+        user => user.username === data.username && user.password === data.password
+      );
+      
+      if (matchedUser) {
+        // Store user info in localStorage
+        localStorage.setItem("userRole", matchedUser.role);
         localStorage.setItem("isAuthenticated", "true");
-        toast.success("Connexion administrateur réussie!");
-        navigate("/admin");
+        localStorage.setItem("userEmail", matchedUser.username);
+        
+        if (matchedUser.role === "admin") {
+          toast.success("Connexion administrateur réussie!");
+          navigate("/admin");
+        } else {
+          toast.success("Connexion réussie!");
+          navigate("/dashboard");
+        }
       } else {
-        // Regular user authentication
+        // Fallback for non-default users
         localStorage.setItem("userRole", "user");
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("userEmail", data.username);
