@@ -46,6 +46,7 @@ export const getAdminHeaders = (adminKey: string) => {
 
 // Récupération de la clé API depuis le localStorage
 export const getApiKey = (): string | null => {
+  console.log("getApiKey",localStorage.getItem("api_key"))
   return localStorage.getItem("api_key");
 };
 

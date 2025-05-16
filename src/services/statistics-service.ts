@@ -29,7 +29,7 @@ export const StatisticsService = {
       }
 
       const data = await response.json();
-      return data.total;
+      return data.total_users;
     } catch (error) {
       console.error("Erreur de récupération des statistiques utilisateurs:", error);
       // Return mock data when API is unavailable
@@ -73,11 +73,12 @@ export const StatisticsService = {
       const dailyData = await dailyResponse.json();
       const riskData = await riskResponse.json();
 
+
       return {
-        totalPredictions: totalData.total,
-        monthlyPredictions: monthlyData.total,
-        dailyPredictions: dailyData.total,
-        averageRisk: riskData.average,
+        totalPredictions: totalData.total_predictions,
+        monthlyPredictions: monthlyData.monthly_predictions,
+        dailyPredictions: dailyData.daily_predictions,
+        averageRisk: riskData.average_risk,
       };
     } catch (error) {
       console.error("Erreur de récupération des statistiques de prédictions:", error);

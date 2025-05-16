@@ -55,6 +55,7 @@ export const PredictionService = {
         }
       }
 
+      console.log("data",response.json())
       return await response.json() as PredictionResponse;
     } catch (error) {
       console.error("Erreur de prédiction:", error);
@@ -70,6 +71,7 @@ export const PredictionService = {
     }
 
     try {
+      console.log("url:" ,apiKey)
       const url = `${API_ENDPOINTS.HISTORY}?api_key=${apiKey}`;
       const response = await fetch(url, {
         method: "GET",
@@ -80,7 +82,8 @@ export const PredictionService = {
         throw new Error("Erreur lors de la récupération de l'historique.");
       }
 
-      const data = await response.json() as HistoryResponse;
+      const data = await response.json();
+      console.log("data:",data)
       return data.history;
     } catch (error) {
       console.error("Erreur de récupération d'historique:", error);

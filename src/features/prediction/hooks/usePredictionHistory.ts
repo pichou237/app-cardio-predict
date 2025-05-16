@@ -21,6 +21,7 @@ export const usePredictionHistory = () => {
 
     try {
       const historyData = await PredictionService.getHistory();
+      console.log("historyData:",historyData)
       setHistory(historyData);
     } catch (err) {
       console.error("Erreur lors de la récupération de l'historique:", err);
