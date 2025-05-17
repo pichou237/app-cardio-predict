@@ -108,7 +108,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const formatRiskLevel = (prediction: number) => {
-    const riskPercentage = prediction * 100;
+    const riskPercentage = prediction *100;
     if (riskPercentage < 30) return "Faible";
     if (riskPercentage < 70) return "Modéré";
     return "Élevé";
@@ -282,7 +282,7 @@ const ProfilePage: React.FC = () => {
                             </div>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Score: {(entry.prediction * 100).toFixed(1)}%
+                            Score: {(entry.prediction).toFixed(1)}%
                           </p>
                         </div>
                       ))}

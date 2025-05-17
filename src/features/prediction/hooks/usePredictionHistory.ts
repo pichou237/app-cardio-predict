@@ -24,8 +24,8 @@ export const usePredictionHistory = () => {
 
     try {
       const historyData = await PredictionService.getHistory(apiKey);
-      console.log("historyData:", historyData);
-      setHistory(historyData);
+      console.log("historyData:", historyData.history);
+      setHistory(historyData.history);
     } catch (err) {
       console.error("Erreur lors de la récupération de l'historique:", err);
       setError("Impossible de charger l'historique des prédictions");
