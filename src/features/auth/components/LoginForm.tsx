@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthService, AuthCredentials } from "@/services/auth-service";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { AlertTriangle } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Le nom d'utilisateur est requis." }),
@@ -51,9 +51,10 @@ const LoginForm: React.FC = () => {
       };
       
       try {
-        const response = await AuthService.login(credentials);
+        // We know the login method returns a string (the API key)
+        const apiKey = await AuthService.login(credentials);
         
-        if (response && response.api_key) {
+        if (apiKey) {
           // Authentification réussie via l'API
           localStorage.setItem("userRole", "user"); // Par défaut utilisateur normal
           localStorage.setItem("isAuthenticated", "true");
@@ -140,7 +141,7 @@ const LoginForm: React.FC = () => {
       
       {loginError && (
         <Alert variant="destructive">
-          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Erreur de connexion</AlertTitle>
           <AlertDescription>{loginError}</AlertDescription>
         </Alert>

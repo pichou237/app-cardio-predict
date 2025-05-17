@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PredictionService } from "@/services/prediction-service";
-import { isAuthenticated } from "@/services/api-config";
+import { isAuthenticated, getApiKey } from "@/services/api-config";
 import { PredictionFormData } from "../schemas/predictionFormSchema";
 
 export const usePredictionForm = () => {
@@ -68,8 +68,11 @@ export const usePredictionForm = () => {
       console.log("Envoi des données pour prédiction:", features);
       
       try {
-        // Appel à l'API de prédiction
-        const result = await PredictionService.predict(features);
+        // Récupérer la clé API pour l'authentification
+        const apiKey = getApiKey();
+        
+        // Appel à l'API de prédiction avec l'API key
+        const result = await PredictionService.predict(features, apiKey);
         console.log("Réponse de l'API:", result);
         
         // Calcul des facteurs de risque
@@ -80,7 +83,7 @@ export const usePredictionForm = () => {
         sessionStorage.setItem("predictionResult", JSON.stringify({
           risk: result.prediction / 100, // Convertir en pourcentage entre 0 et 1
           factors: factors,
-          timestamp: result.timestamp
+          timestamp: new Date().toISOString() // Ajouter un timestamp si non fourni par l'API
         }));
         
         toast.success("Analyse complétée avec succès!");
