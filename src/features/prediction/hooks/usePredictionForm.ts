@@ -11,21 +11,19 @@ export const usePredictionForm = () => {
   const navigate = useNavigate();
 
   const prepareRequestData = (data: PredictionFormData): number[] => {
-    // Convert form data to the format expected by the API (array of features)
+    // Réduire à seulement les 10 paramètres les plus essentiels pour la prédiction
+    // Ces paramètres ont été sélectionnés comme étant les plus pertinents médicalement
     return [
-      parseInt(data.age),
-      parseInt(data.sex),
-      parseInt(data.cp),
-      parseInt(data.trestbps),
-      parseInt(data.chol),
-      parseInt(data.fbs),
-      parseInt(data.restecg),
-      parseInt(data.thalach),
-      parseInt(data.exang),
-      parseFloat(data.oldpeak),
-      parseInt(data.slope),
-      parseInt(data.ca),
-      parseInt(data.thal)
+      parseInt(data.age),        // Âge
+      parseInt(data.sex),        // Sexe
+      parseInt(data.cp),         // Type de douleur thoracique
+      parseInt(data.trestbps),   // Tension artérielle au repos
+      parseInt(data.chol),       // Cholestérol
+      parseInt(data.fbs),        // Glycémie à jeun
+      parseInt(data.thalach),    // Fréquence cardiaque maximale
+      parseInt(data.exang),      // Angine induite par l'exercice
+      parseInt(data.ca),         // Nombre de vaisseaux principaux
+      parseInt(data.thal)        // Thalassémie
     ];
   };
 
@@ -65,13 +63,13 @@ export const usePredictionForm = () => {
       }
 
       const features = prepareRequestData(data);
-      console.log("Envoi des données pour prédiction:", features);
+      console.log("Envoi des données pour prédiction (10 paramètres):", features);
       
       try {
         // Récupérer la clé API pour l'authentification
         const apiKey = getApiKey();
         
-        // Appel à l'API de prédiction avec l'API key
+        // Appel à l'API de prédiction avec l'API key et seulement 10 paramètres
         const result = await PredictionService.predict(features, apiKey);
         console.log("Réponse de l'API:", result);
         
