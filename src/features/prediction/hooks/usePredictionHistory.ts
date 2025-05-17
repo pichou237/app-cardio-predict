@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { PredictionService, HistoryEntry } from "@/services/prediction-service";
 import { toast } from "sonner";
-import { isAuthenticated } from "@/services/api-config";
+import { isAuthenticated, getApiKey } from "@/services/api-config";
 
 export const usePredictionHistory = () => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -18,10 +18,13 @@ export const usePredictionHistory = () => {
 
     setIsLoading(true);
     setError(null);
+    
+    // Récupérer la clé API pour l'authentification
+    const apiKey = getApiKey();
 
     try {
-      const historyData = await PredictionService.getHistory();
-      console.log("historyData:",historyData)
+      const historyData = await PredictionService.getHistory(apiKey);
+      console.log("historyData:", historyData);
       setHistory(historyData);
     } catch (err) {
       console.error("Erreur lors de la récupération de l'historique:", err);

@@ -7,20 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link } from "react-router-dom";
 import StatisticsDashboard from "@/features/statistics/components/StatisticsDashboard";
 import HistoryStats from "@/features/prediction/components/HistoryStats";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 
 const DashboardPage: React.FC = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-
-  useEffect(() => {
-    // Check if user is admin
-    const userRole = localStorage.getItem("userRole");
-    setIsAdmin(userRole === "admin");
-    
-    // Check if in offline mode
-    const offlineMode = localStorage.getItem("isOfflineMode") === "true";
-    setIsOfflineMode(offlineMode);
-  }, []);
+  const { role, isAuthenticated, isOfflineMode } = useCurrentUser();
+  const isAdmin = role === "admin";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -84,11 +75,12 @@ const DashboardPage: React.FC = () => {
             </Card>
           </div>
           
-          {/* Statistiques section */}
-          {!isOfflineMode && <StatisticsDashboard />}
+          {/* Statistiques section - Uniquement les stats globales pour l'admin */}
+          {!isOfflineMode && isAdmin && <StatisticsDashboard />}
           
-          {/* Historique et statistiques personnelles */}
+          {/* Historique et statistiques personnelles - Pour tous les utilisateurs */}
           <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Vos statistiques personnelles</h2>
             <HistoryStats />
           </div>
           

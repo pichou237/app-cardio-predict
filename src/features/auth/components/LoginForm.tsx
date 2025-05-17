@@ -10,6 +10,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthService, AuthCredentials } from "@/services/auth-service";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Le nom d'utilisateur est requis." }),
@@ -26,6 +28,7 @@ const DEFAULT_CREDENTIALS = [
 const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const form = useForm<LoginFormData>({
@@ -38,6 +41,8 @@ const LoginForm: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    setLoginError(null);
+    
     try {
       // Cast to AuthCredentials to ensure type safety
       const credentials: AuthCredentials = {
@@ -46,24 +51,45 @@ const LoginForm: React.FC = () => {
       };
       
       try {
-        await AuthService.login(credentials);
-      } catch (apiError) {
+        const response = await AuthService.login(credentials);
+        
+        if (response && response.api_key) {
+          // Authentification réussie via l'API
+          localStorage.setItem("userRole", "user"); // Par défaut utilisateur normal
+          localStorage.setItem("isAuthenticated", "true");
+          localStorage.setItem("userEmail", data.username);
+          localStorage.setItem("isOfflineMode", "false");
+          
+          toast.success("Connexion réussie!");
+          navigate("/dashboard");
+          return;
+        }
+      } catch (apiError: any) {
         console.error("API Error:", apiError);
-        // Activate offline mode if API is unreachable
+        
+        // Si l'erreur indique que l'utilisateur n'existe pas
+        if (apiError.message && apiError.message.includes("utilisateur non trouvé")) {
+          setLoginError("Utilisateur non trouvé. Veuillez vérifier vos identifiants ou créer un compte.");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Sinon, activer le mode hors ligne
         setIsOfflineMode(true);
         toast.warning("Mode hors ligne activé: API inaccessible");
       }
       
-      // Check against default credentials
+      // Vérifier les identifiants par défaut (pour démo et mode hors ligne)
       const matchedUser = DEFAULT_CREDENTIALS.find(
         user => user.username === data.username && user.password === data.password
       );
       
       if (matchedUser) {
-        // Store user info in localStorage
+        // Stocker les infos utilisateur dans localStorage
         localStorage.setItem("userRole", matchedUser.role);
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("userEmail", matchedUser.username);
+        localStorage.setItem("isOfflineMode", isOfflineMode ? "true" : "false");
         
         if (matchedUser.role === "admin") {
           toast.success("Connexion administrateur réussie!");
@@ -73,16 +99,12 @@ const LoginForm: React.FC = () => {
           navigate("/dashboard");
         }
       } else {
-        // Fallback for non-default users
-        localStorage.setItem("userRole", "user");
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userEmail", data.username);
-        toast.success("Connexion réussie!");
-        navigate("/dashboard");
+        // Aucune correspondance avec les identifiants par défaut
+        setLoginError("Identifiants incorrects. Veuillez réessayer.");
       }
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      toast.error(error instanceof Error ? error.message : "Échec de la connexion. Veuillez réessayer.");
+      setLoginError(error instanceof Error ? error.message : "Échec de la connexion. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +113,7 @@ const LoginForm: React.FC = () => {
   const handleOfflineLogin = () => {
     setIsLoading(true);
     try {
-      // Set offline user
+      // Définir l'utilisateur hors ligne
       localStorage.setItem("userRole", "user");
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userEmail", "utilisateur.test@offline.com");
@@ -115,6 +137,14 @@ const LoginForm: React.FC = () => {
           Entrez vos identifiants pour accéder à votre compte
         </p>
       </div>
+      
+      {loginError && (
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTitle>Erreur de connexion</AlertTitle>
+          <AlertDescription>{loginError}</AlertDescription>
+        </Alert>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
