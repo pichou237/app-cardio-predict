@@ -108,7 +108,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const formatRiskLevel = (prediction: number) => {
-    const riskPercentage = prediction *100;
+    const riskPercentage = prediction;
     if (riskPercentage < 30) return "Faible";
     if (riskPercentage < 70) return "Modéré";
     return "Élevé";
@@ -274,8 +274,8 @@ const ProfilePage: React.FC = () => {
                               </span>
                             </div>
                             <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              entry.prediction < 0.3 ? 'bg-green-100 text-green-800' : 
-                              entry.prediction < 0.7 ? 'bg-yellow-100 text-yellow-800' : 
+                              entry.prediction < 25 ? 'bg-green-100 text-green-800' : 
+                              entry.prediction < 50 ? 'bg-yellow-100 text-yellow-800' : 
                               'bg-red-100 text-red-800'
                             }`}>
                               Risque {formatRiskLevel(entry.prediction)}

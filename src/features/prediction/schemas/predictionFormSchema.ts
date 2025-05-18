@@ -11,10 +11,10 @@ export const predictionSchema = z.object({
   cp: z.string({
     required_error: "Veuillez sélectionner un type de douleur thoracique",
   }),
-  trestbps: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 50 && parseInt(val) < 250, {
+  trestbps: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 0 && parseInt(val) < 250, {
     message: "La tension artérielle doit être un nombre entre 50 et 250",
   }),
-  chol: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 100 && parseInt(val) < 600, {
+  chol: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 0 && parseInt(val) < 600, {
     message: "Le cholestérol doit être un nombre entre 100 et 600",
   }),
   fbs: z.string({
@@ -23,7 +23,7 @@ export const predictionSchema = z.object({
   restecg: z.string({
     required_error: "Veuillez sélectionner les résultats ECG au repos",
   }),
-  thalach: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 50 && parseInt(val) < 250, {
+  thalach: z.string().refine((val) => !isNaN(parseInt(val)) && parseInt(val) > 0 && parseInt(val) < 250, {
     message: "La fréquence cardiaque maximale doit être un nombre entre 50 et 250",
   }),
   exang: z.string({

@@ -1,7 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import StatisticsDashboard from "@/features/statistics/components/StatisticsDashboard";
+import { StatisticsService } from "@/services/statistics-service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -91,6 +93,17 @@ const AdminPage: React.FC = () => {
     email: "",
     role: "user" as "admin" | "user"
   });
+  const [usersAll, setUsersAll] = useState<[]>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const fetchedUsers = await StatisticsService.getAllUsers();
+      setUsersAll(fetchedUsers);
+    };
+
+    fetchUsers();
+  }, []);
+
 
   // Handle user form input change
   const handleUserFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,6 +200,11 @@ const AdminPage: React.FC = () => {
             <p className="text-muted-foreground">Bienvenue sur le tableau de bord d'administration</p>
           </div>
           
+            {/* statisque personnalise */}
+          <div className="grid mb-5">
+              <StatisticsDashboard />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
@@ -371,12 +389,12 @@ const AdminPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {users.map((user) => (
+                      {usersAll.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">{user.id}</TableCell>
-                          <TableCell>{user.name}</TableCell>
+                          <TableCell>{user.username}</TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.date}</TableCell>
+                          <TableCell>{user.first_activity}</TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               user.role === 'admin' 

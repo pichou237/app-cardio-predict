@@ -37,6 +37,28 @@ export const StatisticsService = {
     }
   },
 
+  // Get total users
+  getAllUsers: async (): Promise<number> => {
+    try {
+      const response = await fetch(API_ENDPOINTS.PUBLIC_USERS, {
+        method: "GET",
+        headers: getAuthHeaders(false),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération du nombre d'utilisateurs.");
+      }
+
+      const data = await response.json();
+      console.log("data:",data.users)
+      return data.users;
+    } catch (error) {
+      console.error("Erreur de récupération de la liste d'utilisateurs:", error);
+      // Return mock data when API is unavailable
+      return 128;
+    }
+  },
+
   // Get prediction statistics
   getPredictionStats: async (): Promise<PredictionStats> => {
     try {
