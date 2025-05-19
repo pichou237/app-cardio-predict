@@ -13,19 +13,20 @@ import { User, Lock, Shield, Clock } from "lucide-react";
 import { AuthService } from "@/services/auth-service";
 import { usePredictionHistory } from "@/features/prediction/hooks/usePredictionHistory";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { en } from "date-fns/locale";
 
 const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
     name: localStorage.getItem("username") || "Utilisateur",
-    email: localStorage.getItem("userEmail") || "",
+    email: localStorage.getItem("email") || "",
     phone: "06 12 34 56 78",
     birthdate: "1980-01-01",
     address: "123 Rue de Paris, 75001 Paris",
     profilePicture: ""
   });
-
+ 
+  console.log(localStorage)
   const { history, isLoading: isLoadingHistory } = usePredictionHistory();
 
   const handleSaveProfile = async (e: React.FormEvent) => {

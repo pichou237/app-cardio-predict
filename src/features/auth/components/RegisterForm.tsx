@@ -14,6 +14,7 @@ import { AuthService } from "@/services/auth-service";
 const registerSchema = z.object({
   username: z.string().min(2, { message: "Le nom d'utilisateur doit contenir au moins 2 caractères." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
+  email: z.string().email({ message: "Entrer un email valide." }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas.",
@@ -32,6 +33,7 @@ const RegisterForm: React.FC = () => {
     defaultValues: {
       username: "",
       password: "",
+      email: "",
       confirmPassword: "",
     },
   });
@@ -39,10 +41,10 @@ const RegisterForm: React.FC = () => {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      const { username, password } = data;
-      
+      const { username, password , email } = data;
+      console.log("data:",data)
       try {
-        await AuthService.register({ username, password });
+        await AuthService.register({ username, password ,email});
       } catch (apiError) {
         console.error("API Error:", apiError);
         // Activate offline mode if API is unreachable
@@ -59,6 +61,7 @@ const RegisterForm: React.FC = () => {
       localStorage.setItem("userRole", "user");
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("username", username);
+      localStorage.setItem("email", eamil);
       
       // Redirection après inscription
       navigate("/dashboard");
@@ -110,6 +113,20 @@ const RegisterForm: React.FC = () => {
                 <FormLabel>Nom d'utilisateur</FormLabel>
                 <FormControl>
                   <Input placeholder="monnomdutilisateur" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="email@gmail.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

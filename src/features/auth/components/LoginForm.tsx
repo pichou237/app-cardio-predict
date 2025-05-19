@@ -47,6 +47,7 @@ const LoginForm: React.FC = () => {
       // Cast to AuthCredentials to ensure type safety
       const credentials: AuthCredentials = {
         username: data.username,
+        email: data.email,
         password: data.password
       };
       
@@ -58,9 +59,9 @@ const LoginForm: React.FC = () => {
           // Authentification réussie via l'API
           localStorage.setItem("userRole", "user"); // Par défaut utilisateur normal
           localStorage.setItem("isAuthenticated", "true");
-          localStorage.setItem("userEmail", data.username);
+          localStorage.setItem("userEmail", data.email);
           localStorage.setItem("isOfflineMode", "false");
-          
+          console.log("user:",data)
           toast.success("Connexion réussie!");
           navigate("/dashboard");
           return;

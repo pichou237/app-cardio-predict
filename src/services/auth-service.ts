@@ -4,6 +4,7 @@ import { API_ENDPOINTS, getAuthHeaders, saveApiKey, removeApiKey } from "./api-c
 // Interface pour les données d'inscription/connexion
 export interface AuthCredentials {
   username: string;
+  email:string;
   password: string;
 }
 
@@ -67,7 +68,7 @@ export const AuthService = {
       }
 
       const data = await response.json() as AuthResponse;
-      saveApiKey(data.api_key);
+      console.log("user data:",data)
       localStorage.setItem("username", credentials.username);
       return data.api_key;
     } catch (error) {

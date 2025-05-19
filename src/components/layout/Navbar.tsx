@@ -73,6 +73,9 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated: propIsAuthenticated = 
               ) : (
                 // User navigation - removed dashboard link
                 <>
+                  <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary">
+                    Tableau de bord 
+                  </Link>
                   <Link to="/prediction" className="text-sm font-medium text-muted-foreground hover:text-primary">
                     Nouvelle prédiction
                   </Link>
