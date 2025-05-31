@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -16,6 +17,8 @@ import { AlertTriangle } from "lucide-react";
 const loginSchema = z.object({
   username: z.string().min(1, { message: "Le nom d'utilisateur est requis." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
+  email: z.string().default(""),
+  role: z.string().default("")
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -48,7 +51,8 @@ const LoginForm: React.FC = () => {
       const credentials: AuthCredentials = {
         username: data.username,
         email: data.email,
-        password: data.password
+        password: data.password,
+        role: data.role
       };
       
       try {
@@ -61,9 +65,13 @@ const LoginForm: React.FC = () => {
           localStorage.setItem("isAuthenticated", "true");
           localStorage.setItem("userEmail", data.email);
           localStorage.setItem("isOfflineMode", "false");
-          console.log("user:",data)
+          console.log("user:",data);
           toast.success("Connexion réussie!");
-          navigate("/dashboard");
+          if(data.role == 'admin'){
+            navigate('/admin')
+          }else{
+            navigate("/dashboard");
+          }
           return;
         }
       } catch (apiError: any) {

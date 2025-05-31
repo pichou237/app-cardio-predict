@@ -13,7 +13,7 @@ import { User, Lock, Shield, Clock } from "lucide-react";
 import { AuthService } from "@/services/auth-service";
 import { usePredictionHistory } from "@/features/prediction/hooks/usePredictionHistory";
 import { formatDistanceToNow } from "date-fns";
-import { en } from "date-fns/locale";
+import { fr } from "date-fns/locale";
 
 const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
