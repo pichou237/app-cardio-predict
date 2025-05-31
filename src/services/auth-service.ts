@@ -6,6 +6,7 @@ export interface AuthCredentials {
   username: string;
   email:string;
   password: string;
+  role:string
 }
 
 // Interface pour la mise à jour du profil utilisateur
